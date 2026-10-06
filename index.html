@@ -49,6 +49,41 @@
       background: rgba(15, 23, 42, 0.85);
       border: 1px solid rgba(56, 189, 248, 0.2);
     }
+    .refresh-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 9999px;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      background: rgba(14, 165, 233, 0.08);
+      color: #bae6fd;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      transition: all 0.2s ease;
+    }
+    .refresh-indicator.is-success {
+      border-color: rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.08);
+      color: #a7f3d0;
+    }
+    .refresh-spinner {
+      display: inline-block;
+      width: 0.85rem;
+      height: 0.85rem;
+      flex: 0 0 auto;
+      border: 2px solid rgba(56, 189, 248, 0.3);
+      border-top-color: #38bdf8;
+      border-radius: 50%;
+      animation: refresh-spin 0.7s linear infinite;
+    }
+    @keyframes refresh-spin {
+      to { transform: rotate(360deg); }
+    }
+    .refresh-indicator.hidden {
+      display: none;
+    }
     /* Custom scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
@@ -83,7 +118,11 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button id="btn-refresh" onclick="app.fetchWeatherData()" class="flex items-center gap-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg border border-slate-700 transition">
+        <div id="refresh-indicator" class="refresh-indicator hidden" aria-live="polite">
+          <i id="refresh-indicator-icon" class="fa-solid fa-rotate text-sky-400"></i>
+          <span id="refresh-status-text">Refreshing...</span>
+        </div>
+        <button id="btn-refresh" data-refresh-trigger="true" onclick="app.fetchWeatherData()" class="flex items-center gap-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg border border-slate-700 transition">
           <i class="fa-solid fa-rotate text-sky-400" id="refresh-icon"></i>
           <span class="hidden sm:inline">Refresh Data</span>
         </button>
@@ -249,7 +288,7 @@
             </select>
           </div>
 
-          <button onclick="app.fetchWeatherData()" class="w-full bg-slate-800 hover:bg-slate-700 text-sky-400 font-semibold py-2 rounded-lg border border-slate-700 text-xs transition flex items-center justify-center gap-1.5">
+          <button id="btn-update-forecast" data-refresh-trigger="true" onclick="app.fetchWeatherData()" class="w-full bg-slate-800 hover:bg-slate-700 text-sky-400 font-semibold py-2 rounded-lg border border-slate-700 text-xs transition flex items-center justify-center gap-1.5">
             <i class="fa-solid fa-cloud-arrow-down"></i> Update Forecast Data
           </button>
         </div>
@@ -450,6 +489,7 @@
 
         this.forecastData = null;
         this.chart = null;
+        this.isRefreshing = false;
 
         // Timer state
         this.timerSeconds = 600; // 10 minutes default
@@ -459,6 +499,59 @@
 
         // Bindings
         this.init();
+      }
+
+      setRefreshState(isLoading, success = false) {
+        const indicator = document.getElementById('refresh-indicator');
+        const indicatorIcon = document.getElementById('refresh-indicator-icon');
+        const indicatorText = document.getElementById('refresh-status-text');
+        const refreshIcon = document.getElementById('refresh-icon');
+        const buttons = document.querySelectorAll('[data-refresh-trigger]');
+
+        buttons.forEach((button) => {
+          const isTopButton = button.id === 'btn-refresh';
+          const label = isTopButton ? 'Refresh Data' : 'Update Forecast Data';
+          button.disabled = isLoading;
+          button.classList.toggle('opacity-60', isLoading);
+          button.classList.toggle('cursor-not-allowed', isLoading);
+
+          if (isLoading) {
+            button.innerHTML = `
+              <span class="refresh-spinner" aria-hidden="true"></span>
+              <span class="${isTopButton ? 'hidden sm:inline' : ''}">Refreshing...</span>
+            `;
+            return;
+          }
+
+          button.innerHTML = `
+            <i class="fa-solid fa-rotate text-sky-400" id="${isTopButton ? 'refresh-icon' : 'refresh-icon-fallback'}"></i>
+            <span class="${isTopButton ? 'hidden sm:inline' : ''}">${label}</span>
+          `;
+        });
+
+        if (indicator) {
+          indicator.classList.toggle('hidden', !isLoading && !success);
+          indicator.classList.toggle('is-success', success && !isLoading);
+
+          if (isLoading) {
+            indicator.classList.remove('is-success');
+            indicatorIcon.className = 'refresh-spinner';
+            indicatorIcon.setAttribute('aria-hidden', 'true');
+            indicatorText.textContent = 'Refreshing forecast...';
+            return;
+          }
+
+          if (success) {
+            indicatorIcon.className = 'fa-solid fa-check text-emerald-400';
+            const now = new Date();
+            indicatorText.textContent = `Updated ${now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+          }
+        }
+
+        if (refreshIcon) {
+          refreshIcon.classList.remove('fa-spin');
+          refreshIcon.classList.add('text-sky-400');
+        }
       }
 
       init() {
@@ -511,8 +604,10 @@
       }
 
       async fetchWeatherData() {
-        const refreshIcon = document.getElementById('refresh-icon');
-        if (refreshIcon) refreshIcon.classList.add('fa-spin');
+        if (this.isRefreshing) return;
+        this.isRefreshing = true;
+        const refreshStartedAt = Date.now();
+        this.setRefreshState(true);
 
         this.lat = parseFloat(document.getElementById('input-lat').value) || 53.818;
         this.lon = parseFloat(document.getElementById('input-lon').value) || -1.879;
@@ -536,7 +631,12 @@
           console.warn("Forecast fetch failed, using realistic fallback data:", err);
           this.loadFallbackForecast();
         } finally {
-          if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+          const remainingLoadingTime = 500 - (Date.now() - refreshStartedAt);
+          if (remainingLoadingTime > 0) {
+            await new Promise(resolve => setTimeout(resolve, remainingLoadingTime));
+          }
+          this.isRefreshing = false;
+          this.setRefreshState(false, true);
         }
       }
 

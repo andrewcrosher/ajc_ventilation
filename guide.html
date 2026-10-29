@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A practical guide to dew point, relative humidity and using the VentiSmart ventilation forecast.">
+  <title>Ventilation Guide — VentiSmart</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0f19;
+      color: #f3f4f6;
+    }
+    body.light-theme {
+      background-color: #f1f5f9;
+      color: #1e293b;
+    }
+    body.light-theme header,
+    body.light-theme .glass-card {
+      background-color: rgba(255, 255, 255, 0.92);
+      border-color: #cbd5e1;
+    }
+    body.light-theme [class*="bg-slate-9"],
+    body.light-theme [class*="bg-slate-8"] {
+      background-color: #e2e8f0;
+    }
+    body.light-theme [class*="text-slate-100"] { color: #0f172a; }
+    body.light-theme [class*="text-slate-200"] { color: #1e293b; }
+    body.light-theme [class*="text-slate-300"] { color: #334155; }
+    body.light-theme [class*="text-slate-400"] { color: #475569; }
+    body.light-theme [class*="text-slate-500"] { color: #64748b; }
+    body.light-theme [class~="text-white"] { color: #0f172a; }
+    body.light-theme [class*="border-slate-7"],
+    body.light-theme [class*="border-slate-8"] {
+      border-color: #cbd5e1;
+    }
+    body.light-theme [class*="text-sky-300"] { color: #075985; }
+    body.light-theme [class*="text-sky-100"] { color: #0c4a6e; }
+    body.light-theme [class*="text-sky-400"] { color: #0369a1; }
+    body.light-theme [class*="text-emerald-400"] { color: #047857; }
+    body.light-theme [class*="text-amber-400"] { color: #b45309; }
+    body.light-theme [class*="text-indigo-400"] { color: #4338ca; }
+    .glass-card {
+      background: rgba(17, 24, 39, 0.72);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .hero-glow {
+      background:
+        radial-gradient(ellipse at 82% 18%, rgba(14, 165, 233, 0.22), transparent 38%),
+        radial-gradient(ellipse at 18% 100%, rgba(16, 185, 129, 0.12), transparent 40%);
+    }
+    html { scroll-behavior: smooth; }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+    :focus-visible {
+      outline: 3px solid #38bdf8;
+      outline-offset: 3px;
+    }
+    body.light-theme :focus-visible {
+      outline-color: #0369a1;
+    }
+    @media (max-width: 639px) {
+      .site-header {
+        padding-inline: 0.75rem;
+      }
+      .site-nav {
+        gap: 0.25rem;
+      }
+      .site-nav-link,
+      .theme-toggle {
+        min-width: 44px;
+        min-height: 44px;
+        justify-content: center;
+        padding-inline: 0.625rem;
+      }
+      .site-brand {
+        gap: 0.5rem;
+      }
+      .site-brand-mark {
+        width: 2.25rem;
+        height: 2.25rem;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased">
+  <header class="sticky top-0 z-50 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md">
+    <div class="site-header mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6 lg:px-8">
+      <a href="index.html" class="site-brand flex min-w-0 items-center gap-3" aria-label="VentiSmart home">
+        <span class="site-brand-mark flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-sky-500/20 bg-sky-500/10 text-sky-400">
+          <i class="fa-solid fa-wind text-lg" aria-hidden="true"></i>
+        </span>
+        <span>
+          <span class="block font-bold leading-tight text-slate-100">VentiSmart</span>
+          <span class="hidden text-[11px] text-slate-400 sm:block">A practical ventilation guide</span>
+        </span>
+      </a>
+      <nav class="site-nav flex items-center gap-2" aria-label="Main navigation">
+        <a href="index.html" aria-label="Dashboard" class="site-nav-link inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white">
+          <i class="fa-solid fa-chart-line text-sky-400" aria-hidden="true"></i><span class="hidden sm:inline">Dashboard</span>
+        </a>
+        <a href="guide.html" aria-label="Guide" aria-current="page" class="site-nav-link inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-sky-500/20 bg-sky-500/10 px-3 py-2 text-xs font-semibold text-sky-300">
+          <i class="fa-solid fa-book-open" aria-hidden="true"></i><span class="hidden sm:inline">Guide</span>
+        </a>
+        <button id="theme-toggle" type="button" class="theme-toggle ml-1 flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-slate-200 transition hover:bg-slate-700" aria-pressed="false">
+          <i class="fa-solid fa-sun text-amber-400" aria-hidden="true"></i>
+          <span class="hidden sm:inline">Light mode</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl space-y-8 px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+    <section class="hero-glow relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/50 px-6 py-10 sm:px-10 sm:py-14" aria-labelledby="page-title">
+      <div class="relative z-10 max-w-3xl space-y-5">
+        <h1 id="page-title" class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+          Make sense of the air <span class="text-sky-400">around you.</span>
+        </h1>
+        <p class="max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+          A plain-English guide to dew point, humidity and the forecast—so you can make a more informed call about when to air a room.
+        </p>
+        <div class="flex flex-wrap gap-3 pt-1">
+          <a href="index.html" class="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-sky-500/20 transition hover:bg-sky-400">
+            Open the dashboard <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          </a>
+          <a href="#quick-start" class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/70 px-5 py-3 text-sm font-semibold text-slate-200 transition hover:bg-slate-800">
+            Start with the basics <i class="fa-solid fa-chevron-down text-xs text-sky-400" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+      <div class="pointer-events-none absolute -right-10 -top-8 hidden h-72 w-72 items-center justify-center rounded-full border border-sky-400/10 sm:flex" aria-hidden="true">
+        <div class="flex h-52 w-52 items-center justify-center rounded-full border border-sky-400/10">
+          <i class="fa-solid fa-wind text-7xl text-sky-400/20"></i>
+        </div>
+      </div>
+    </section>
+
+    <section id="quick-start" class="space-y-4" aria-labelledby="quick-start-title">
+      <div class="max-w-2xl">
+        <h2 id="quick-start-title" class="text-2xl font-bold text-slate-100 sm:text-3xl">Three things to know</h2>
+      </div>
+      <div class="grid gap-x-8 gap-y-6 border-y border-slate-800 py-6 md:grid-cols-3">
+        <article>
+          <h3 class="font-bold text-slate-100">Dew point tracks moisture</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-400">It helps compare how much water vapour is in air at different temperatures. A lower dew point generally means drier air.</p>
+        </article>
+        <article class="md:border-x md:border-slate-800 md:px-8">
+          <h3 class="font-bold text-slate-100">Compare like with like</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-400">VentiSmart compares forecast outdoor dew point with your chosen indoor target dew point—not outdoor and indoor RH percentages.</p>
+        </article>
+        <article>
+          <h3 class="font-bold text-slate-100">Use it as a guide</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-400">A favourable forecast is one useful signal. Comfort, heating needs, outdoor pollution and the source of moisture still matter.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]" aria-labelledby="example-title">
+      <div class="glass-card rounded-2xl p-6 sm:p-8">
+        <h2 id="example-title" class="text-2xl font-bold text-slate-100">Why not just look at relative humidity?</h2>
+        <p class="mt-3 text-sm leading-relaxed text-slate-400">Relative humidity changes with temperature. Cool air can show a high RH while still carrying less water vapour than warmer indoor air.</p>
+        <div class="mt-6 grid gap-3 sm:grid-cols-2">
+          <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Indoors · example target</p>
+            <p class="mt-2 text-lg font-bold text-slate-100">19°C <span class="font-medium text-slate-400">· 55% RH</span></p>
+            <p class="mt-1 text-sm text-sky-300">Dew point: about 9.7°C</p>
+          </div>
+          <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+            <p class="text-xs font-semibold uppercase tracking-wide text-emerald-400">Outdoors · example forecast</p>
+            <p class="mt-2 text-lg font-bold text-slate-100">15°C <span class="font-medium text-slate-400">· 70% RH</span></p>
+            <p class="mt-1 text-sm text-emerald-300">Dew point: about 9.6°C</p>
+          </div>
+        </div>
+        <p class="mt-4 rounded-xl border border-sky-500/15 bg-sky-500/5 p-4 text-sm leading-relaxed text-sky-100">
+          Even though the outdoor RH is higher in this example, its dew point is slightly lower. That suggests the outdoor air contains slightly less moisture and may help lower indoor moisture when brought inside and warmed. The difference is small, so treat it as a cue—not a guarantee.
+        </p>
+      </div>
+
+      <aside class="glass-card rounded-2xl p-6 sm:p-8" aria-labelledby="steps-title">
+        <h2 id="steps-title" class="text-2xl font-bold text-slate-100">How to use the dashboard</h2>
+        <ol class="mt-6 space-y-5">
+          <li class="flex gap-4">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-sky-500/30 bg-sky-500/10 text-xs font-bold text-sky-300">1</span>
+            <div><h3 class="text-sm font-semibold text-slate-100">Choose a useful indoor target</h3><p class="mt-1 text-sm leading-relaxed text-slate-400">Set the indoor temperature and target RH to reflect your room or goal. The app converts these into a dew point threshold.</p></div>
+          </li>
+          <li class="flex gap-4">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-sky-500/30 bg-sky-500/10 text-xs font-bold text-sky-300">2</span>
+            <div><h3 class="text-sm font-semibold text-slate-100">Check the forecast and timing</h3><p class="mt-1 text-sm leading-relaxed text-slate-400">Refresh the forecast for your location. Look at the recommendation and hourly dew point chart for a suitable window.</p></div>
+          </li>
+          <li class="flex gap-4">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-sky-500/30 bg-sky-500/10 text-xs font-bold text-sky-300">3</span>
+            <div><h3 class="text-sm font-semibold text-slate-100">Ventilate briefly, then reassess</h3><p class="mt-1 text-sm leading-relaxed text-slate-400">If conditions and comfort allow, air the room. The optional timer is a reminder, not a prescribed ventilation duration.</p></div>
+          </li>
+        </ol>
+      </aside>
+    </section>
+
+    <section class="space-y-4" aria-labelledby="terms-title">
+      <div>
+        <h2 id="terms-title" class="text-2xl font-bold text-slate-100 sm:text-3xl">A few useful terms</h2>
+      </div>
+      <dl class="grid gap-x-10 md:grid-cols-2">
+        <div class="border-b border-slate-800 py-5">
+          <dt class="font-semibold text-slate-100">Dew point</dt>
+          <dd class="mt-1 text-sm leading-relaxed text-slate-400">The temperature air would need to cool to (at its current moisture content) for water vapour to begin condensing. Higher dew point generally indicates more moisture in the air.</dd>
+        </div>
+        <div class="border-b border-slate-800 py-5">
+          <dt class="font-semibold text-slate-100">Relative humidity (RH)</dt>
+          <dd class="mt-1 text-sm leading-relaxed text-slate-400">How close air is to saturation at its current temperature, expressed as a percentage. RH can change when temperature changes, even if the amount of water vapour stays the same.</dd>
+        </div>
+        <div class="border-b border-slate-800 py-5">
+          <dt class="font-semibold text-slate-100">Indoor target dew point</dt>
+          <dd class="mt-1 text-sm leading-relaxed text-slate-400">The app calculates this from the indoor temperature and target RH you set. It is a comparison threshold, not a measurement of your actual room.</dd>
+        </div>
+        <div class="border-b border-slate-800 py-5">
+          <dt class="font-semibold text-slate-100">Purge ventilation</dt>
+          <dd class="mt-1 text-sm leading-relaxed text-slate-400">A short period of increased ventilation to exchange indoor air with outdoor air. Whether and how to ventilate depends on the building, weather and your situation.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6 sm:p-8" aria-labelledby="limits-title">
+      <div class="flex items-start gap-4">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span>
+        <div class="max-w-4xl">
+          <h2 id="limits-title" class="text-lg font-bold text-slate-100">A helpful signal, not the whole picture</h2>
+          <p class="mt-2 text-sm leading-relaxed text-slate-300">VentiSmart uses forecast temperature and humidity to estimate outdoor dew point, then compares it with your calculated indoor target. Forecasts can be inaccurate, and the app does not measure your room, airflow, surface temperatures, pollutants or moisture sources.</p>
+          <p class="mt-3 text-sm leading-relaxed text-slate-300">Use your judgement: consider comfort and heat loss, and follow relevant local health or building guidance. Ventilation may not address leaks, persistent condensation or other underlying damp problems.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="glass-card flex flex-col items-start justify-between gap-5 rounded-2xl p-6 sm:flex-row sm:items-center sm:p-8" aria-labelledby="back-to-app-title">
+      <div>
+        <h2 id="back-to-app-title" class="text-xl font-bold text-slate-100">Ready to check the forecast?</h2>
+        <p class="mt-1 text-sm text-slate-400">Open the dashboard to see the current recommendation for your selected location.</p>
+      </div>
+      <a href="index.html" class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-sky-400">
+        Go to dashboard <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+      </a>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-800 px-4 py-6 text-center text-xs text-slate-400">
+    VentiSmart is an informational tool. Forecasts and calculations are estimates, not professional advice.
+  </footer>
+
+  <script>
+    const themeToggle = document.getElementById('theme-toggle');
+    let isLightMode = localStorage.getItem('ventismart-theme') === 'light';
+
+    function applyTheme() {
+      document.documentElement.classList.toggle('dark', !isLightMode);
+      document.body.classList.toggle('light-theme', isLightMode);
+      document.documentElement.style.colorScheme = isLightMode ? 'light' : 'dark';
+      themeToggle.setAttribute('aria-pressed', String(isLightMode));
+      themeToggle.setAttribute('aria-label', `Switch to ${isLightMode ? 'dark' : 'light'} mode`);
+      themeToggle.title = `Switch to ${isLightMode ? 'dark' : 'light'} mode`;
+      themeToggle.innerHTML = `
+        <i class="fa-solid ${isLightMode ? 'fa-moon text-indigo-400' : 'fa-sun text-amber-400'}" aria-hidden="true"></i>
+        <span class="hidden sm:inline">${isLightMode ? 'Dark mode' : 'Light mode'}</span>
+      `;
+    }
+
+    themeToggle.addEventListener('click', () => {
+      isLightMode = !isLightMode;
+      localStorage.setItem('ventismart-theme', isLightMode ? 'light' : 'dark');
+      applyTheme();
+    });
+
+    applyTheme();
+  </script>
+</body>
+</html>

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="A practical guide to dew point, relative humidity and using the VentiSmart ventilation forecast.">
   <title>Ventilation Guide — VentiSmart</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -82,6 +83,14 @@
     body.light-theme :focus-visible {
       outline-color: #0369a1;
     }
+    .refresh-toggle-placeholder {
+      visibility: hidden;
+    }
+    .refresh-indicator-placeholder {
+      width: 11rem;
+      flex: 0 0 11rem;
+      visibility: hidden;
+    }
     @media (max-width: 639px) {
       .site-header {
         padding-inline: 0.75rem;
@@ -90,11 +99,15 @@
         gap: 0.25rem;
       }
       .site-nav-link,
-      .theme-toggle {
+      .theme-toggle,
+      .refresh-toggle {
         min-width: 44px;
         min-height: 44px;
         justify-content: center;
         padding-inline: 0.625rem;
+      }
+      .refresh-indicator-placeholder {
+        display: none;
       }
       .site-brand {
         gap: 0.5rem;
@@ -125,10 +138,15 @@
         <a href="guide.html" aria-label="Guide" aria-current="page" class="site-nav-link inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-sky-500/20 bg-sky-500/10 px-3 py-2 text-xs font-semibold text-sky-300">
           <i class="fa-solid fa-book-open" aria-hidden="true"></i><span class="hidden sm:inline">Guide</span>
         </a>
+        <span class="refresh-indicator-placeholder" aria-hidden="true"></span>
         <button id="theme-toggle" type="button" class="theme-toggle ml-1 flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-slate-200 transition hover:bg-slate-700" aria-pressed="false">
           <i class="fa-solid fa-sun text-amber-400" aria-hidden="true"></i>
           <span class="hidden sm:inline">Light mode</span>
         </button>
+        <span class="refresh-toggle refresh-toggle-placeholder invisible flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border border-transparent bg-transparent px-3 py-2 text-xs" aria-hidden="true">
+          <i class="fa-solid fa-rotate text-sky-400"></i>
+          <span class="sr-only sm:not-sr-only">Refresh Data</span>
+        </span>
       </nav>
     </div>
   </header>

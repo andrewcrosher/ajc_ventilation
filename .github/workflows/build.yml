@@ -1,0 +1,50 @@
+name: build
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check JavaScript syntax
+        run: |
+          set -euo pipefail
+          node --check uk-cities.js
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          for html_file in (Path("index.html"), Path("guide.html")):
+              html = html_file.read_text(encoding="utf-8")
+              scripts = re.findall(r"<script\b([^>]*)>(.*?)</script\s*>", html, re.IGNORECASE | re.DOTALL)
+              inline_scripts = [body for attrs, body in scripts if not re.search(r"\bsrc\s*=", attrs, re.IGNORECASE) and body.strip()]
+              for index, script in enumerate(inline_scripts, start=1):
+                  Path(f"/tmp/{html_file.stem}-{index}.js").write_text(script, encoding="utf-8")
+          PY
+
+          for script in /tmp/index-*.js /tmp/guide-*.js; do
+            [ -f "$script" ] || continue
+            node --check "$script"
+          done
+
+      - name: Verify Pages entry points
+        run: test -s index.html && test -s guide.html && test -s uk-cities.js
